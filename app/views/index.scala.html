@@ -1,7 +1,19 @@
 @(message: String)
 
 @main("Welcome to Play") {
-
-    @play20.welcome(message)
-
+<script>
+$(function() {
+	console.log("test");
+	var url = "http://excel-extract.herokuapp.com/";
+	//var url = "http://localhost:9000/";
+	$.ajax({
+		"url" : url, 
+		"method" : "GET",
+		"success" : function(data) {
+			console.log("test2: " + JSON.stringify(data));
+		}
+	})
+})
+</script>
+<h1>test</h1>
 }
