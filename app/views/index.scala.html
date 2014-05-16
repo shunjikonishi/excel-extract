@@ -3,6 +3,7 @@
 @main("Welcome to Play") {
 <style>
 dd { margin-bottom: 20px;}
+pre { margin: 10px; padding: 5px; background-color: #fafad2;}
 </style>
 <h1>Excel extractor</h1>
 <p>アップロードされたExcelファイルから名前付きセルの値を抜き出します。</p>
@@ -81,6 +82,19 @@ dd { margin-bottom: 20px;}
 	<p>このため行単位でどのセルにも値が設定されていない空行が最後まで連続する場合はそれらの行は切り捨てられます。</p>
 	<p>途中に空行があってもその後に値が出現する場合は途中の行も維持されます。</p>
 </div>
+<h2>コードサンプル</h2>
+<p>使用しているクラス： <a href="https://github.com/shunjikonishi/excel2canvas/blob/master/src/main/java/jp/co/flect/excel2canvas/NamedValueExtractor.java">NamedValueExtractor</a></p>
+<pre>
+File excelFile;
+Locale locale;
+
+NamedValueExtractor extractor = new NamedValueExtractor(locale);
+extractor.setConvertString(false);
+extractor.setIncludeFormulaValue(false);
+
+Map<String, Object[]> map = extractor.extract(excelFile);
+String json = NamedValueExtractor.toJson(map);
+</pre>
 <script>
 $(function() {
 	$("#btnUpload").click(function() {
