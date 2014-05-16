@@ -1,19 +1,101 @@
 @(message: String)
 
 @main("Welcome to Play") {
+<style>
+dd { margin-bottom: 20px;}
+</style>
+<h1>Excel extractor</h1>
+<p>アップロードされたExcelファイルから名前付きセルの値を抜き出します。</p>
+<p>抜き出した値はJSON化されてクライアントに戻されます。</p>
+<h2>デモ</h2>
+<div>
+	<form id="form" enctype="multipart/form-data">
+		<table>
+			<tr>
+				<th>言語：</th>
+				<td>
+					<select name="locale">
+						<option value="ja">日本語</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th></th>
+				<td>
+					<input name="convertString" type="checkbox" value="true"> 値を文字列に変換
+				</td>
+			</tr>
+			<tr>
+				<th></th>
+				<td>
+					<input name="includeFormula" type="checkbox" value="true"> 範囲の取得時に計算セルの値を含める
+				</td>
+			</tr>
+			<tr>
+				<th>Excelファイル：</th>
+				<td>
+					<input type="file" name="file"/>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<button type="button" id="btnUpload">アップロード</button>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+<div id="result"></div>
+<h2>テストデータ</h2>
+<div>
+	<p>ダウンロード後適当に編集してアップロードしてみてください。</p>
+	<p>
+		<a href="/assets/order.xlsx">注文書</a>
+		<a href="/assets/estimate.xlsx">見積書</a>
+	</p>
+</div>
+<h2>パラメータ</h2>
+<div>
+	<dl>
+		<dt>言語</dt>
+		<dd>アップロードするExcelファイルの言語。言語が正しくないと日付書式などの一部の書式文字列が正しく反映されません。</dd>
+
+		<dt>値を文字列に変換</dt>
+		<dd>
+			チェックした場合取得した値を文字列に変換します。<br>
+			値を文字列化した場合は書式設定が適用されます。(カンマ区切りや日付書式など)<br>
+			値を文字列化しない場合は個別の値はstring, number, boolean, date(JSONにはdate型はないので厳密には「yyyy-MM-dd'T'HH:mm:ss.sss」形式の文字列)のいずれかになります。
+		</dd>
+
+		<dt>範囲の取得時に計算セルの値を含める</dt>
+		<dd>
+			デフォルトでは名前付けされたセル範囲が複数セルにまたがる場合は計算セルは取得対象に含まれません。(単一セルの場合はこの指定に関わらず計算セルの値も取得します。)<br>
+			チェックした場合複数セルの場合も計算セルの値を取得します。<br>
+			この仕様を利用して範囲内で元から設定されている固定値を読み飛ばしたい場合には「='人'」のように計算式として値を設定することでそのセルを読み飛ばすこともできます。
+		</dd>
+	</dl>
+</div>
+<h2>指定範囲内の空白セルについて</h2>
+<div>
+	<p>明細などを範囲で指定する場合、全体のうち上数行にのみ値が設定され残りは空行となることが多いです。</p>
+	<p>このため行単位でどのセルにも値が設定されていない空行が最後まで連続する場合はそれらの行は切り捨てられます。</p>
+	<p>途中に空行があってもその後に値が出現する場合は途中の行も維持されます。</p>
+</div>
 <script>
 $(function() {
-	console.log("test");
-	var url = "http://excel-extract.herokuapp.com/";
-	//var url = "http://localhost:9000/";
-	$.ajax({
-		"url" : url, 
-		"method" : "GET",
-		"success" : function(data) {
-			console.log("test2: " + JSON.stringify(data));
-		}
+	$("#btnUpload").click(function() {
+		var formData = new FormData($("#form")[0]);
+		$.ajax({
+			"url" : "/upload",
+			"type" : "POST",
+			"contentType" : false,
+			"processData" : false,
+			"data" : formData,
+			"success" : function(data) {
+				$("#result").text(JSON.stringify(data));
+			}
+		})
 	})
 })
 </script>
-<h1>test</h1>
 }
