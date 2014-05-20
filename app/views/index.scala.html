@@ -3,11 +3,13 @@
 @main("Welcome to Play") {
 <style>
 dd { margin-bottom: 20px;}
-pre { margin: 10px; padding: 5px; background-color: #fafad2;}
+pre { margin: 10px; padding: 10px; background-color: #fafad2;}
 </style>
 <h1>Excel extractor</h1>
 <p>アップロードされたExcelファイルから名前付きセルの値を抜き出します。</p>
 <p>抜き出した値はJSON化されてクライアントに戻されます。</p>
+<img src="/assets/images/snapshot.png">
+<hr>
 <h2>デモ</h2>
 <div>
 	<form id="form" enctype="multipart/form-data">
@@ -46,29 +48,45 @@ pre { margin: 10px; padding: 5px; background-color: #fafad2;}
 		</table>
 	</form>
 </div>
-<div id="result"></div>
+<div>
+	<h3>結果</h3>
+	<div id="result"></div>
+</div>
+<hr>
 <h2>テストデータ</h2>
 <div>
 	<p>ダウンロード後適当に編集してアップロードしてみてください。</p>
-	<p>
-		<a href="/assets/order.xlsx">注文書</a>
-		<a href="/assets/estimate.xlsx">見積書</a>
-	</p>
+	<ul>
+		<li><a href="/assets/order.xlsx">注文書</a></li>
+		<li><a href="/assets/estimate.xlsx">見積書</a></li>
+	</ul>
 </div>
-<h2>パラメータ</h2>
+<h2>使い方</h2>
+<p>「file」というパラメータ名でExcelファイルをポストするだけです。</p>
+<p>いくつかオプションのパラメータが指定できます。</p>
+<p>CORS対応しているので任意のドメインからクロスドメインでAjaxでリクエストすることも可能です。</p>
+<p>(Ajaxでファイルをアップロードする方法はこのページのソースで見ることができます。)</p>
+<h3>パラメータ</h3>
 <div>
 	<dl>
-		<dt>言語</dt>
-		<dd>アップロードするExcelファイルの言語。言語が正しくないと日付書式などの一部の書式文字列が正しく反映されません。</dd>
+		<dt><b>language</b> - 言語</dt>
+		<dd>
+			アップロードするExcelファイルの言語。言語が正しくないと日付書式などの一部の書式文字列が正しく反映されません。<br>
+			日本語版Excelを処理する場合は「ja」を指定します。
+		</dd>
 
-		<dt>値を文字列に変換</dt>
+		<dt><b>convertString</b> - 値を文字列に変換</dt>
 		<dd>
 			チェックした場合取得した値を文字列に変換します。<br>
 			値を文字列化した場合は書式設定が適用されます。(カンマ区切りや日付書式など)<br>
 			値を文字列化しない場合は個別の値はstring, number, boolean, date(JSONにはdate型はないので厳密には「yyyy-MM-dd'T'HH:mm:ss.sss」形式の文字列)のいずれかになります。
+			<p>例</p>
+			<ul>
+				<li>5000 -> 5,000</li>
+				<li>2014-05-20T00:00:00.000 -> 2014年5月20日</li>
+			</ul>
 		</dd>
-
-		<dt>範囲の取得時に計算セルの値を含める</dt>
+		<dt><b>includeFormula</b> - 範囲の取得時に計算セルの値を含める</dt>
 		<dd>
 			デフォルトでは名前付けされたセル範囲が複数セルにまたがる場合は計算セルは取得対象に含まれません。(単一セルの場合はこの指定に関わらず計算セルの値も取得します。)<br>
 			チェックした場合複数セルの場合も計算セルの値を取得します。<br>
@@ -76,14 +94,15 @@ pre { margin: 10px; padding: 5px; background-color: #fafad2;}
 		</dd>
 	</dl>
 </div>
-<h2>指定範囲内の空白セルについて</h2>
+<h3>指定範囲内の空白セルについて</h3>
 <div>
 	<p>明細などを範囲で指定する場合、全体のうち上数行にのみ値が設定され残りは空行となることが多いです。</p>
 	<p>このため行単位でどのセルにも値が設定されていない空行が最後まで連続する場合はそれらの行は切り捨てられます。</p>
 	<p>途中に空行があってもその後に値が出現する場合は途中の行も維持されます。</p>
 </div>
-<h2>コードサンプル</h2>
-<p>使用しているクラス： <a href="https://github.com/shunjikonishi/excel2canvas/blob/master/src/main/java/jp/co/flect/excel2canvas/NamedValueExtractor.java">NamedValueExtractor</a></p>
+<h2>Javaアプリ内で直接値の抽出を行う場合</h2>
+<p>処理を行っているクラス自体はexcel2canvas.jar内で<a href="https://github.com/shunjikonishi/excel2canvas/blob/master/src/main/java/jp/co/flect/excel2canvas/NamedValueExtractor.java">NamedValueExtractor</a>クラスとして公開されています。</p>
+<p>オプションパラメータがそのままメソッドになっているイメージで数行のコードで実装できます。</p>
 <pre>
 File excelFile;
 Locale locale;

@@ -13,20 +13,14 @@ object Application extends Controller {
 
   def index = Action { implicit request =>
     Ok(views.html.index("Excel extractor"))
-    /*
-    var ret = if (request.method == "OPTIONS") {
-      Ok("")
-    } else {
-      Ok("""{"status" : "OK"}""").as("application/json")
-    }
-    ret.withHeaders(
-      "Access-Control-Allow-Origin" -> "http://localhost:9000",
-      "Access-Control-Allow-Methods" -> "POST, GET, OPTIONS",
-      "Access-Control-Allow-Headers" -> "X-PINGOTHER"
-    )
-    */
   }
 
+  def options = Action { implicit request =>
+    Ok("").withHeaders(
+      "Access-Control-Allow-Origin" -> "*",
+      "Access-Control-Allow-Methods" -> "POST, OPTIONS"
+    )
+  }
   def upload = Action(parse.multipartFormData) { implicit request =>
     val (filename, file) = request.body.file("file").map { file =>
       val temp = File.createTempFile("tmp", file.filename)
@@ -34,19 +28,27 @@ object Application extends Controller {
       (file.filename, temp)
     }.getOrElse(throw new IOException("Could not find uploaded file."))
     Form(tuple(
-      "locale" -> nonEmptyText,
-      "convertString" -> boolean,
-      "includeFormula" -> boolean
+      "language" -> optional(text),
+      "convertString" -> optional(boolean),
+      "includeFormula" -> optional(boolean)
     )).bindFromRequest.fold(
       hasErrors={ form =>
         throw new IllegalStateException()
       },
-      success={ case (locale, convertString, includeFormula) =>
-        val extractor = new NamedValueExtractor(new Locale(locale))
+      success={ case (l, cs, f) =>
+        val locale = l.map(new Locale(_)).getOrElse(Locale.getDefault)
+        val convertString = cs.getOrElse(false)
+        val includeFormula = f.getOrElse(false)
+        val extractor = new NamedValueExtractor(locale)
         extractor.setConvertString(convertString)
         extractor.setIncludeFormulaValue(includeFormula)
         val map = extractor.extract(file)
-        Ok(NamedValueExtractor.toJson(map)).as("application/json;charset=utf-8")
+        Ok(NamedValueExtractor.toJson(map))
+          .as("application/json;charset=utf-8")
+          .withHeaders(
+            "Access-Control-Allow-Origin" -> "*",
+            "Access-Control-Allow-Methods" -> "POST, OPTIONS"
+          )
       }
     )
   }
